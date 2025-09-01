@@ -1,0 +1,26 @@
+# Enable rewrites
+RewriteEngine On
+
+# 0) Let Let's Encrypt/ACME challenges pass
+RewriteRule ^\.well-known/acme-challenge/ - [L]
+
+# 1) Skip rules on local/dev hosts (optional)
+RewriteCond %{HTTP_HOST} ^(localhost|127\.0\.0\.1|nnakki\.local)(:\d+)?$ [NC]
+RewriteRule ^ - [L]
+
+# Force HTTPS and non-www in one step
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} ^www\.nnakki\.online$ [NC]
+RewriteRule ^ https://nnakki.online%{REQUEST_URI} [R=301,L,NE]
+
+# 3) Redirect any request that explicitly has .html → clean URL
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+RewriteRule ^ %1 [R=301,L]
+
+# 4) Internally serve clean slugs from matching .html files
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^([^/]+)/?$ $1.html [L]
+
+# 5) Optional security hardening
+Options -Indexes
